@@ -11,4 +11,4 @@ Create with start.spring.io with a Spring Web dependency.
 docker build -t hoot-api-posts .
 
 ## Run Docker image
-docker run --name hoot-api-posts-container -p 5000:80 hoot-api-posts 
+docker run --rm --name hoot-api-posts-container -p 8080:8080 hoot-api-posts 
