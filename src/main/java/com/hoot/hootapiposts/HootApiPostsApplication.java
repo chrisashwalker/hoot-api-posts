@@ -4,9 +4,12 @@ import java.util.List;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
@@ -33,7 +36,7 @@ public class HootApiPostsApplication {
     }
 
     @PostMapping("/posts")
-    public Post addPost(@RequestBody Post newPost) {
+    public Post createPost(@RequestBody Post newPost) {
         try {
             if (newPost.getId() != 0) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
@@ -54,20 +57,38 @@ public class HootApiPostsApplication {
         throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
     }
 
-/*
+    @PutMapping("/posts")
+    public ResponseEntity<String> replacePost(@RequestBody Post newPost) {
+        try {
+            PostsDataStore.Posts.findById(newPost.getId())
+            .ifPresentOrElse((post) -> {
+                post.setId(newPost.getId());
+                post.setName(newPost.getName());
+                PostsDataStore.Posts.save(post);
+            }, () -> { throw new RuntimeException(); });
+        }
+        catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+        }
+        return new ResponseEntity<>("Replaced post.", HttpStatus.NO_CONTENT);
+    }
 
-@app.route("/teams", methods=['PUT'])
-@expects_json(replace_schema)
-def replace_team():
-    replacement = request.get_json()
-    
-    for t in teams:
-        if t.id == replacement.get("id", None):
-            t.name = replacement.get("name", None)
-            t.parent = replacement.get("parent", None)
-            return jsonify({}), 204
-          
-    return jsonify({"message": "Bad request"}), 400
+    @DeleteMapping("/posts/{id}")
+    public ResponseEntity<String> deletePost(@PathVariable Long id) {
+        try {
+		    PostsDataStore.Posts.findById(id)
+            .ifPresentOrElse(
+                (post) -> { PostsDataStore.Posts.delete(post); },
+                () -> { throw new RuntimeException(); }
+            );
+        }
+        catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
+        return new ResponseEntity<>("Deleted post.", HttpStatus.OK);
+    }
+
+/*
 
 @app.route("/teams/<int:id>", methods=['PATCH'])
 def update_team(id):
@@ -81,14 +102,6 @@ def update_team(id):
           
     return jsonify({"message": "Bad request"}), 400    
 
-@app.route("/teams/<int:id>", methods=['DELETE'])
-def delete_team(id):
-    for t in teams:
-        if t.id == id:
-            teams.remove(t)
-            return jsonify({}), 204
-          
-    return jsonify({"message": "Team not found"}), 404
 */
 
 }
