@@ -1,19 +1,25 @@
 package com.hoot.hootapiposts.data;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.stream.IntStream;
-
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import java.util.stream.LongStream;
 import com.hoot.hootapiposts.models.Post;
 
+@Configuration
 public class PostsDataStore {
     
-    public static PostsDataStore Current = new PostsDataStore();
-    public List<Post> Posts = Collections.emptyList();
+    public static PostRepository Posts;
 
-    public PostsDataStore()
-    {
-        IntStream.range(1, 5).boxed().forEach(i -> Posts.add(new Post(i, "Post" + i)));
+    PostsDataStore(PostRepository repository) {
+        Posts = repository;
+    }
+
+    @Bean
+    CommandLineRunner initDatabase(PostRepository repository) {
+        return (args) -> {
+            LongStream.range(1, 5).boxed().forEach(i -> repository.save(new Post(i, "Post" + Long.toString(i))));
+        };
     }
 
 }

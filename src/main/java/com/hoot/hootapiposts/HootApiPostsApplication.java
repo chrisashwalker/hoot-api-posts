@@ -1,10 +1,17 @@
 package com.hoot.hootapiposts;
 
+import java.util.List;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
+import com.hoot.hootapiposts.data.PostsDataStore;
+import com.hoot.hootapiposts.models.Post;
 
 @SpringBootApplication
 @RestController
@@ -15,59 +22,39 @@ public class HootApiPostsApplication {
 	}
 
 	@GetMapping("/posts")
-    public String getPosts() {
-		return "Posts";
+    public List<Post> getPosts() {
+		return PostsDataStore.Posts.findAll();
     }
 
 	@GetMapping("/posts/{id}")
-    public String getPosts(@PathVariable String id) {
-		return id;
+    public Post getPost(@PathVariable Long id) {
+		return PostsDataStore.Posts.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+    }
+
+    @PostMapping("/posts")
+    public Post addPost(@RequestBody Post newPost) {
+        try {
+            if (newPost.getId() != 0) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+            }
+        }
+        catch (ResponseStatusException r) {
+            throw r;
+        }
+        catch(Exception e){
+            if (newPost.getName().isEmpty()) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+            }
+    
+            Long maxId = PostsDataStore.Posts.getMaxPostId();
+            newPost.setId(++maxId);
+            return PostsDataStore.Posts.save(newPost);
+        }
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
     }
 
 /*
-@app.route("/teams", methods=['GET'])
-def get_teams():
-    return jsonify([t.__dict__ for t in teams])
-
-@app.route("/teams/<int:id>", methods=['GET'])
-def get_team(id):
-    for t in teams:
-        if t.id == id:
-            return jsonify(t.__dict__)
-          
-    return jsonify({"message": "Team not found"}), 404
-
-create_schema = {
-  "type": "object",
-  "properties": {
-    "name": { "type": "string" },
-    "parent": { "type": "number" }
-  },
-  "required": ["name"]
-}
-
-@app.route("/teams", methods=['POST'])
-@expects_json(create_schema)
-def create_team():
-    team_to_create = request.get_json()
-
-    max_id = 0
-    if teams:
-        max_id = max([t.id for t in teams])
-    
-    newTeam = Team(max_id + 1, team_to_create.get("name", None), team_to_create.get("parent", None))
-    teams.append(newTeam)
-    return jsonify(newTeam.__dict__), 201
-
-replace_schema = {
-  "type": "object",
-  "properties": {
-    "id": { "type": "number" },
-    "name": { "type": "string" },
-    "parent": { "type": "number" }
-  },
-  "required": ["id", "name"]
-}
 
 @app.route("/teams", methods=['PUT'])
 @expects_json(replace_schema)
