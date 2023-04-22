@@ -1,14 +1,26 @@
-## Creation
-Create with start.spring.io with a Spring Web dependency.
+# Hoot Posts API
+The posts management service for [Hoot](https://github.com/chrisashwalker/hoot) - a tiny Human Resources management system built upon microservices.  
+Developed with Java Spring.
 
-## Execute app
+## Run
+```
 ./gradlew bootRun
+```
 
-## Create JAR
+## Build
+```
 ./gradlew build
+```
 
-## Create Docker image
+## Build Docker image
+```
 docker build -t hoot-api-posts .
+```
 
-## Run Docker image
+## Create and run docker container
+```
 docker run --name hoot-api-posts-container -p 8002:8002 hoot-api-posts 
+```
+
+## Scaffolded with
+[start.spring.io](start.spring.io)
