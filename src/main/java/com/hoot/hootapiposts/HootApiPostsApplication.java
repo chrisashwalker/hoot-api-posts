@@ -7,12 +7,18 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.fge.jsonpatch.JsonPatch;
+import com.github.fge.jsonpatch.JsonPatchException;
 import com.hoot.hootapiposts.data.PostsDataStore;
 import com.hoot.hootapiposts.models.Post;
 
@@ -73,6 +79,22 @@ public class HootApiPostsApplication {
         return new ResponseEntity<>("Replaced post.", HttpStatus.NO_CONTENT);
     }
 
+    @PatchMapping(path = "/posts/{id}", consumes = "application/json-patch+json")
+    public ResponseEntity<String> updatePost(@PathVariable Long id, @RequestBody JsonPatch patch) {
+        try {
+            var mapper = new ObjectMapper();
+            Post post = PostsDataStore.Posts.findById(id).orElseThrow(RuntimeException::new);
+            JsonNode patchedJson = patch.apply(mapper.convertValue(post, JsonNode.class));
+            Post patchedPost = mapper.treeToValue(patchedJson, Post.class);
+            PostsDataStore.Posts.save(patchedPost);
+        } catch (JsonPatchException | JsonProcessingException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+        } catch (RuntimeException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
+        return new ResponseEntity<>("Patched post.", HttpStatus.OK);
+    }
+
     @DeleteMapping("/posts/{id}")
     public ResponseEntity<String> deletePost(@PathVariable Long id) {
         try {
@@ -87,21 +109,5 @@ public class HootApiPostsApplication {
         }
         return new ResponseEntity<>("Deleted post.", HttpStatus.OK);
     }
-
-/*
-
-@app.route("/teams/<int:id>", methods=['PATCH'])
-def update_team(id):
-    patch = JsonPatch.from_string(request.get_data(True,True,False))
-    
-    for t in teams:
-        if t.id == id:
-            patched_dict = patch.apply(t.__dict__)
-            t.rebuild(patched_dict)
-            return jsonify({}), 204
-          
-    return jsonify({"message": "Bad request"}), 400    
-
-*/
 
 }
