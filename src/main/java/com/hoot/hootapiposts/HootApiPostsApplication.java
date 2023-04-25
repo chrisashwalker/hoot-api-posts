@@ -100,7 +100,10 @@ public class HootApiPostsApplication {
         try {
 		    PostsDataStore.Posts.findById(id)
             .ifPresentOrElse(
-                (post) -> { PostsDataStore.Posts.delete(post); },
+                (post) -> { 
+                    PostsDataStore.Posts.delete(post); 
+                    MessageService.Instance.PostDeletionMessage("post", post.getId());
+                },
                 () -> { throw new RuntimeException(); }
             );
         }
