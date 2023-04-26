@@ -1,4 +1,9 @@
-FROM eclipse-temurin:17-jdk-alpine
-VOLUME /tmp
-COPY build/libs/*.jar app.jar
-ENTRYPOINT ["java","-jar","/app.jar"]
+FROM gradle:jdk17-alpine AS BUILD
+WORKDIR /usr/app
+COPY . .
+RUN gradle build
+
+FROM amazoncorretto:17-alpine
+WORKDIR /usr/app
+COPY --from=BUILD /usr/app/build/libs/*SNAPSHOT.jar app.jar
+ENTRYPOINT ["java","-jar","app.jar"]

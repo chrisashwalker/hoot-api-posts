@@ -12,6 +12,6 @@ public class MessageBody {
 
     public String ToString() 
     {
-        return String.format("\"type\": \"%s\", \"objId\": %l}}", this.type, this.objId);
+        return String.format("{\"type\":\"%s\",\"objId\":%s}", this.type, this.objId.toString());
     }
 }
