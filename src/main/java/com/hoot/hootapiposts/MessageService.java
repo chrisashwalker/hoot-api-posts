@@ -13,6 +13,7 @@ public class MessageService
     MessageService()
     {
         try {
+            // Connect to the deleted-objects message queue
             ConnectionFactory factory = new ConnectionFactory();
             factory.setHost("hoot-message-queues");
             this.connection = factory.newConnection();
@@ -24,6 +25,7 @@ public class MessageService
         }
     }
 
+    // Called when an object is deleted so that subscribers may process the deletion as required
     public void PostDeletionMessage(String type, Long objId)
     {
         try {
